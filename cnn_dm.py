@@ -13,7 +13,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 def cnn_model_fn(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
-  input_layer = tf.reshape(features["x"], [-1, 28, 28, 1])
+  input_layer = tf.reshape(features["x"], [-1, 512, 512, 1])
 
   # Convolutional Layer #1
   conv1 = tf.layers.conv2d(
@@ -38,19 +38,23 @@ def cnn_model_fn(features, labels, mode):
       padding="same",
       activation=tf.nn.relu)
   # Convolutional Layer #4 and Batch Normalisation/regularisation
-  regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
+  #regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
   conv3 = tf.layers.conv2d(
       inputs=conv3,
       filters=12,
       kernel_size=[5, 5],
       padding="same",
-      activation=tf.nn.relu,
-      kernel_regularizer=regularizer)
-
+      activation=tf.nn.relu)
+  b_norm = tf.layers.batch_normalization(
+      inputs=conv3,
+      axis=1,
+      momentum=0.2,
+      epsilon=0.01
+  )
 
   predictions = {
       # Generate predictions (for PREDICT and EVAL mode)
-      "classes": tf.argmax(input=logits, axis=1),
+      "classes": tf.argmax(input=b_norm, axis=1),
       # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
       # `logging_hook`.
       "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
